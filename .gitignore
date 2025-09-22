@@ -1,0 +1,32 @@
+# Local prompts
+prompt.md
+Prompt.md
+client_secret_862078544834-o7lb512dqd5ckj9g4h53n99qca4ce9e1.apps.googleusercontent.com.json
+
+# Dependencies
+node_modules/
+
+# Builds
+build/
+dist/
+.cache/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env
+.env
+.env.local
+.env.*.local
+server/.env
+client/.env
+client/.env.local
+server/.env.local
+
+# Editors
+.vscode/
+.DS_Store
+Thumbs.db
