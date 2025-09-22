@@ -18,7 +18,8 @@ export default function App() {
 
   return (
     <div className="min-h-full bg-white text-gray-900 dark:bg-zinc-900 dark:text-zinc-100">
-      <nav className="glass-nav hairline px-4">
+  {/* Mobile top bar (hidden; using floating nav for all sizes) */}
+  <nav className="glass-nav hairline px-4 hidden">
         <div className="max-w-5xl mx-auto flex items-center justify-between py-3 relative">
           <div className="font-semibold tracking-tight">Momentum</div>
           <div className="hidden md:flex items-center gap-6 text-sm">
@@ -59,6 +60,36 @@ export default function App() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </nav>
+
+  {/* Floating nav (centered pill) */}
+  <nav>
+        <div className="nav-outer">
+          <div className="nav-inner">
+            <section className="nav-items">
+              <NavLink to="/" className={({isActive}) => `nav-pill-link ${isActive ? 'is-active' : ''}`}>
+                <p>Home</p>
+              </NavLink>
+              <NavLink to="/diary" className={({isActive}) => `nav-pill-link ${isActive ? 'is-active' : ''}`}>
+                <p>Diary</p>
+              </NavLink>
+              <NavLink to="/dashboard" className={({isActive}) => `nav-pill-link ${isActive ? 'is-active' : ''}`}>
+                <p>Dashboard</p>
+              </NavLink>
+              <div className="nav-background" aria-hidden="true" />
+            </section>
+            <div className="nav-settings">
+              <div className="v-divider" />
+              {loading ? (
+                <button className="nav-pill-link" disabled><p>Loading…</p></button>
+              ) : user ? (
+                <button className="nav-pill-link" onClick={logout}><p>Log Out</p></button>
+              ) : (
+                <button className="nav-pill-link" onClick={login}><p>Log In</p></button>
+              )}
+            </div>
           </div>
         </div>
       </nav>

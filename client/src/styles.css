@@ -6,24 +6,101 @@ html, body, #root { height: 100%; }
 
 :root { color-scheme: light dark; }
 
-/* Navbar inspired styling (original implementation) */
+/* Exact font registrations (from downloaded assets) */
+@font-face{
+	font-family: '__gtSuper';
+	src: url('/fonts/a4add828468857ed-s.p.woff2') format('woff2');
+	font-display: swap;
+	font-weight: 300;
+	font-style: italic;
+}
+@font-face{
+	font-family: '__gtSuper';
+	src: url('/fonts/f83e0febc5850ee7-s.p.woff2') format('woff2');
+	font-display: swap;
+	font-weight: 300;
+	font-style: normal;
+}
+@font-face{
+	font-family: '__neue';
+	src: url('/fonts/4f1ab50647fca980-s.p.otf') format('opentype');
+	font-display: swap;
+	font-weight: 300;
+	font-style: normal;
+}
+@font-face{
+	font-family: '__neue';
+	src: url('/fonts/b755838d3028ac33-s.p.otf') format('opentype');
+	font-display: swap;
+	font-weight: 400;
+	font-style: normal;
+}
+@font-face{
+	font-family: '__neue';
+	src: url('/fonts/b9da7318b7abaa15-s.p.otf') format('opentype');
+	font-display: swap;
+	font-weight: 500;
+	font-style: normal;
+}
+@font-face{
+	font-family: '__jetBrains';
+	src: url('/fonts/7b13d0d32c6ab893-s.p.ttf') format('truetype');
+	font-display: swap;
+}
+
+:root{
+	--font-super: '__gtSuper', Georgia, 'Times New Roman', Times, serif;
+	--font-neue: '__neue', Arial, Helvetica, sans-serif;
+	--font-mono: '__jetBrains', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* Typography mapping */
+body, a, p, span, label, button, input, textarea {
+	font-family: var(--font-neue);
+}
+h1, h2, h3, h4, h5, h6 {
+	font-family: var(--font-super);
+	font-weight: 300;
+}
+code, pre, kbd, samp {
+	font-family: var(--font-mono);
+}
+
+/* Navbar styling aligned to joshw.io tokens (blur, borders, shadow) */
+:root {
+	/* Light/dark surface tokens (extracted) */
+	--jw-color-dropdown-dark: rgba(20, 20, 20, 0.776); /* #141414c6 */
+	--jw-color-dropdown-light: #404040; /* site token for light */
+	--jw-border-weak: hsla(0, 0%, 100%, 0.04);
+	--jw-border-hairline: hsla(0, 0%, 100%, 0.15);
+	--jw-surface-highlight: hsla(0, 0%, 100%, 0.094);
+	--jw-shadow-1: 0 3px 6px rgba(0, 0, 0, 0.188),
+				   0 10px 10px rgba(0, 0, 0, 0.169),
+				   0 23px 14px rgba(0, 0, 0, 0.102),
+				   0 41px 17px rgba(0, 0, 0, 0.031);
+}
+
 .glass-nav {
 	position: sticky;
 	top: 0;
 	z-index: 40;
-	backdrop-filter: saturate(120%) blur(8px);
-	-webkit-backdrop-filter: saturate(120%) blur(8px);
-	background-color: color-mix(in oklab, white 70%, transparent);
+	/* Match 25px blur and subtle translucent surface */
+	backdrop-filter: blur(25px);
+	-webkit-backdrop-filter: blur(25px);
+	background-color: rgba(255, 255, 255, 0.25);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+	box-shadow: var(--jw-shadow-1);
 }
 .dark .glass-nav {
-	background-color: color-mix(in oklab, rgb(24 24 27) 70%, transparent);
+	background-color: var(--jw-color-dropdown-dark);
+	border-bottom-color: var(--jw-border-hairline);
 }
 
 .hairline {
-	border-bottom: 1px solid color-mix(in oklab, rgb(228 228 231) 60%, transparent);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.15);
 }
 .dark .hairline {
-	border-bottom-color: color-mix(in oklab, rgb(39 39 42) 60%, transparent);
+	border-bottom-color: var(--jw-border-hairline);
 }
 
 .nav-link {
@@ -55,17 +132,16 @@ html, body, #root { height: 100%; }
 	top: 100%;
 	margin-top: 0.5rem;
 	width: min(92vw, 22rem);
-	border: 1px solid rgba(24,24,27,0.08);
+	border: 1px solid var(--jw-border-hairline);
 	border-radius: 0.5rem;
-	background: color-mix(in oklab, white 82%, transparent);
-	backdrop-filter: blur(10px);
-	-webkit-backdrop-filter: blur(10px);
-	box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+	background: rgba(255, 255, 255, 0.25);
+	backdrop-filter: blur(25px);
+	-webkit-backdrop-filter: blur(25px);
+	box-shadow: var(--jw-shadow-1);
 }
 .dark .nav-panel {
-	border-color: rgba(255,255,255,0.08);
-	background: color-mix(in oklab, rgb(24 24 27) 82%, transparent);
-	box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+	border-color: var(--jw-border-hairline);
+	background: var(--jw-color-dropdown-dark);
 }
 
 .nav-panel a, .nav-panel button {
@@ -74,3 +150,83 @@ html, body, #root { height: 100%; }
 	text-align: left;
 	padding: 0.75rem 0.875rem;
 }
+
+/* Desktop centered floating nav (inspired by extracted classes) */
+.nav-outer {
+	position: fixed;
+	top: 40px;
+	left: 50%;
+	transform: translateX(-50%);
+	height: 50px;
+	padding: 0 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--jw-color-dropdown-dark);
+	-webkit-backdrop-filter: blur(25px);
+	backdrop-filter: blur(25px);
+	border: 1px solid var(--jw-border-weak);
+	border-radius: 30px;
+	box-shadow: var(--jw-shadow-1);
+	z-index: 999;
+}
+.nav-inner {
+	height: 100%;
+	display: flex;
+	align-items: center;
+}
+.nav-items {
+	position: relative;
+	display: flex;
+	gap: 4px;
+	align-items: center;
+	height: 33px;
+	border-radius: 100px;
+	padding: 6.5px 10px;
+}
+.nav-pill-link {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 5px 16px;
+	border-radius: 18px;
+	color: #fff;
+	font-size: 14px;
+	text-shadow: var(--text-shadow);
+	transition: color .3s ease;
+}
+.nav-pill-link p { color: inherit; }
+.nav-background {
+	position: absolute;
+	left: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 86px;
+	height: 100%;
+	border-radius: 18px 8px 8px 18px;
+	background: var(--jw-surface-highlight);
+	border: 1px solid var(--jw-border-hairline);
+	z-index: -1;
+	transition: left .35s ease, width .35s ease, border-radius .35s ease, opacity .2s ease;
+}
+.nav-settings {
+	display: flex;
+	align-items: center;
+	height: 100%;
+	gap: 12px;
+	padding-right: 10px;
+	margin-left: 10px;
+}
+.v-divider {
+	width: 1px;
+	height: 100%;
+	background: linear-gradient(to top, transparent, var(--jw-border-hairline) 10%, var(--jw-border-hairline) 90%, transparent);
+}
+
+/* Basic active background behavior (left positions approximate order) */
+.nav-items { --pos-home: 10px; --pos-diary: 96px; --pos-dash: 180px; }
+.nav-pill-link.is-active ~ .nav-background { opacity: 1; }
+.nav-items a:nth-of-type(1).is-active ~ .nav-background { left: var(--pos-home); width: 86px; border-radius: 18px 8px 8px 18px; }
+.nav-items a:nth-of-type(2).is-active ~ .nav-background { left: var(--pos-diary); width: 78px; border-radius: 8px; }
+.nav-items a:nth-of-type(3).is-active ~ .nav-background { left: var(--pos-dash); width: 100px; border-radius: 8px 18px 18px 8px; }
