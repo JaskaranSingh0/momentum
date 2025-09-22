@@ -18,20 +18,46 @@ export default function App() {
 
   return (
     <div className="min-h-full bg-white text-gray-900 dark:bg-zinc-900 dark:text-zinc-100">
-      <nav className="border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 sticky top-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="font-semibold">Momentum</div>
-          <button className="md:hidden text-sm border rounded px-2 py-1" onClick={()=>setOpen(o=>!o)}>Menu</button>
-          <div className={`text-sm md:flex md:items-center md:space-x-4 ${open? '' : 'hidden md:block'}`}>
-            <NavLink to="/" className={({isActive}) => `hover:underline ${isActive ? 'underline' : ''}`}>To-Do List</NavLink>
-            <NavLink to="/diary" className={({isActive}) => `hover:underline ${isActive ? 'underline' : ''}`}>Daily Diary</NavLink>
-            <NavLink to="/dashboard" className={({isActive}) => `hover:underline ${isActive ? 'underline' : ''}`}>Dashboard</NavLink>
+      <nav className="glass-nav hairline px-4">
+        <div className="max-w-5xl mx-auto flex items-center justify-between py-3 relative">
+          <div className="font-semibold tracking-tight">Momentum</div>
+          <div className="hidden md:flex items-center gap-6 text-sm">
+            <NavLink to="/" className={({isActive}) => `nav-link ${isActive ? '' : ''}`}>To-Do List</NavLink>
+            <NavLink to="/diary" className={({isActive}) => `nav-link ${isActive ? '' : ''}`}>Daily Diary</NavLink>
+            <NavLink to="/dashboard" className={({isActive}) => `nav-link ${isActive ? '' : ''}`}>Dashboard</NavLink>
+          </div>
+          <div className="hidden md:flex items-center gap-3 text-sm">
             {loading ? (
               <span className="opacity-70">Loading…</span>
             ) : user ? (
-              <button className="ml-2 underline" onClick={logout}>Log Out</button>
+              <button className="nav-link" onClick={logout}>Log Out</button>
             ) : (
-              <button className="ml-2 underline" onClick={login}>Log In with Google</button>
+              <button className="nav-link" onClick={login}>Log In</button>
+            )}
+          </div>
+
+          {/* Mobile */}
+          <div className="md:hidden flex items-center gap-2">
+            <button className="text-sm border rounded px-2 py-1" onClick={()=>setOpen(o=>!o)}>Menu</button>
+            {open && (
+              <div className="nav-panel">
+                <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                  <div>
+                    <NavLink to="/" className="nav-link block" onClick={()=>setOpen(false)}>To-Do List</NavLink>
+                    <NavLink to="/diary" className="nav-link block" onClick={()=>setOpen(false)}>Daily Diary</NavLink>
+                    <NavLink to="/dashboard" className="nav-link block" onClick={()=>setOpen(false)}>Dashboard</NavLink>
+                  </div>
+                  <div>
+                    {loading ? (
+                      <span className="block px-3 py-2 opacity-70">Loading…</span>
+                    ) : user ? (
+                      <button className="nav-link" onClick={()=>{ setOpen(false); logout(); }}>Log Out</button>
+                    ) : (
+                      <button className="nav-link" onClick={()=>{ setOpen(false); login(); }}>Log In</button>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
