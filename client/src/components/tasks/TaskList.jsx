@@ -3,6 +3,7 @@ import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } 
 import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useState } from 'react'
 import TaskItem from './TaskItem.jsx'
+import EditTaskPill from './EditTaskPill.jsx'
 
 function Row({ task, onClick, ...handlers }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task._id })
@@ -26,6 +27,7 @@ export default function TaskList({ date, tasks, setTasks, api }) {
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [focusIndex, setFocusIndex] = useState(0)
+  const [editingId, setEditingId] = useState(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { delay: 500, tolerance: 5 } })
@@ -50,16 +52,20 @@ export default function TaskList({ date, tasks, setTasks, api }) {
       if (e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return
       if (e.key === 'ArrowDown') { setFocusIndex(i => Math.min(i + 1, Math.max(tasks.length - 1, 0))); e.preventDefault(); }
       if (e.key === 'ArrowUp') { setFocusIndex(i => Math.max(i - 1, 0)); e.preventDefault(); }
-      if (e.key.toLowerCase() === 'd' && (e.ctrlKey || e.metaKey)) {
+      if (e.key && e.key.toLowerCase() === 'd' && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
         const t = tasks[focusIndex]; if (!t) return; const next = tasks.map(x => x._id === t._id ? { ...x, done: !x.done } : x); setTasks(next); await api.update(t._id, { done: !t.done }); e.preventDefault();
+      }
+      if (e.key && e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+        const t = tasks[focusIndex]; if (!t) return; setEditingId(t._id); e.preventDefault();
       }
       if (e.key === 'Delete') {
         const t = tasks[focusIndex]; if (!t) return; setTasks(tasks.filter(x => x._id !== t._id)); await api.remove(t._id); e.preventDefault();
       }
+      if (e.key === 'Escape' && editingId) { setEditingId(null); e.preventDefault(); }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [tasks, focusIndex])
+  }, [tasks, focusIndex, editingId])
 
   const onDragEnd = async ({ active, over }) => {
     setDragging(false)
@@ -69,7 +75,7 @@ export default function TaskList({ date, tasks, setTasks, api }) {
     const next = arrayMove(tasks, oldIndex, newIndex)
     setTasks(next)
     try {
-      await api.reorder({ date, ids: next.map(t => t._id) })
+      await api.reorder({ ids: next.map(t => t._id) })
     } catch {}
   }
 
@@ -108,29 +114,37 @@ export default function TaskList({ date, tasks, setTasks, api }) {
       <SortableContext items={tasks.map(t => t._id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
           {tasks.map((t, idx) => (
-            <Row
-              key={t._id}
-              task={t}
-              selectionMode={selectionMode}
-              selected={selectedIds.has(t._id)}
-              onSelectToggle={toggleSelect}
-              isFocused={idx === focusIndex}
-              onClick={() => setFocusIndex(idx)}
-              onToggle={async (task) => {
-                const next = tasks.map(x => x._id === task._id ? { ...x, done: !x.done } : x)
-                setTasks(next)
-                await api.update(task._id, { done: !task.done })
-              }}
-              onRename={async (task, text) => {
-                const next = tasks.map(x => x._id === task._id ? { ...x, text } : x)
-                setTasks(next)
-                await api.update(task._id, { text })
-              }}
-              onDelete={async (task) => {
-                setTasks(tasks.filter(x => x._id !== task._id))
-                await api.remove(task._id)
-              }}
-            />
+            <div key={t._id}>
+              <Row
+                task={t}
+                selectionMode={selectionMode}
+                selected={selectedIds.has(t._id)}
+                onSelectToggle={toggleSelect}
+                isFocused={idx === focusIndex}
+                onClick={() => setFocusIndex(idx)}
+                onToggle={async (task) => {
+                  const next = tasks.map(x => x._id === task._id ? { ...x, done: !x.done } : x)
+                  setTasks(next)
+                  await api.update(task._id, { done: !task.done, forDate: date })
+                }}
+                onDelete={async (task) => {
+                  setTasks(tasks.filter(x => x._id !== task._id))
+                  await api.remove(task._id)
+                }}
+                onEdit={(task) => setEditingId(p => p === task._id ? null : task._id)}
+              />
+              {editingId === t._id && (
+                <EditTaskPill
+                  task={t}
+                  onCancel={() => setEditingId(null)}
+                  onSave={async (patch) => {
+                    const updated = await api.update(t._id, patch)
+                    setTasks(tasks.map(x => x._id === t._id ? updated : x))
+                    setEditingId(null)
+                  }}
+                />
+              )}
+            </div>
           ))}
         </div>
       </SortableContext>

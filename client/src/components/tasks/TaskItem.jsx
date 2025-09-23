@@ -1,9 +1,6 @@
-import { useState } from 'react'
 import clsx from 'clsx'
 
-export default function TaskItem({ task, onToggle, onRename, onDelete, selectionMode = false, selected = false, onSelectToggle, isFocused = false }) {
-  const [editing, setEditing] = useState(false)
-  const [value, setValue] = useState(task.text)
+export default function TaskItem({ task, onToggle, onDelete, onEdit, selectionMode = false, selected = false, onSelectToggle, isFocused = false }) {
 
   return (
     <div className={clsx('task-row group flex items-center gap-3 rounded-xl px-3 py-2 border', 'card', isFocused && 'ring-1')}
@@ -28,21 +25,9 @@ export default function TaskItem({ task, onToggle, onRename, onDelete, selection
         )}
       </button>
 
-      {editing ? (
-        <input
-          autoFocus
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onBlur={() => { setEditing(false); if (value !== task.text) onRename(task, value); }}
-          onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur() } if (e.key === 'Escape') { setEditing(false); setValue(task.text) } }}
-          className="flex-1 bg-transparent outline-none text-sm"
-          placeholder="Task title"
-        />
-      ) : (
-        <div className={clsx('flex-1 text-sm', task.done && 'opacity-60 line-through')} onDoubleClick={() => setEditing(true)}>
-          {task.text}
-        </div>
-      )}
+      <div className={clsx('flex-1 text-sm', task.done && 'opacity-60 line-through')}>
+        {task.text}
+      </div>
 
       {task.priority ? (
         <span className="text-[11px] px-2 py-1 rounded-full border" style={{ borderColor: 'var(--border-hairline)' }}>{task.priority}</span>
@@ -52,6 +37,9 @@ export default function TaskItem({ task, onToggle, onRename, onDelete, selection
         <span key={l} className="text-[11px] px-2 py-1 rounded-full border" style={{ borderColor: 'var(--border-hairline)' }}>#{l}</span>
       ))}
 
+      <button aria-label="Edit task" onClick={() => onEdit?.(task)} className="opacity-0 group-hover:opacity-100 transition-opacity mr-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+      </button>
       <button aria-label="Delete task" onClick={() => onDelete(task)} className="opacity-0 group-hover:opacity-100 transition-opacity">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M14 11v6"/><path d="M10 11v6"/><path d="M18 6l-1-3H7L6 6"/></svg>
       </button>

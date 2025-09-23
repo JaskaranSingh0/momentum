@@ -20,7 +20,7 @@ export const endpoints = {
   logout: () => api('/auth/logout'),
   tasks: {
     list: (date) => api(`/api/tasks?date=${encodeURIComponent(date)}`),
-    create: (date, text) => api('/api/tasks', { method: 'POST', body: JSON.stringify({ date, text }) }),
+  create: (date, text, opts={}) => api('/api/tasks', { method: 'POST', body: JSON.stringify({ date, text, ...opts }) }),
     update: (id, data) => api(`/api/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     remove: (id) => api(`/api/tasks/${id}`, { method: 'DELETE' }),
   },

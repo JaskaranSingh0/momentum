@@ -186,10 +186,10 @@ export default function App() {
                         )
                       }
                       items={[
-                        { key: 'dark', label: 'Dark', selected: prefTheme === 'dark', onSelect: () => handleThemeChange('dark'), icon: (
+                        { key: 'dark', label: 'Dark', selected: prefTheme === 'dark', onSelect: () => { handleThemeChange('dark'); closeSettings(); }, icon: (
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                         ) },
-                        { key: 'light', label: 'Light', selected: prefTheme === 'light', onSelect: () => handleThemeChange('light'), icon: (
+                        { key: 'light', label: 'Light', selected: prefTheme === 'light', onSelect: () => { handleThemeChange('light'); closeSettings(); }, icon: (
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.36 6.36-1.42-1.42M8.05 8.05 6.64 6.64m10.72 0-1.41 1.41M8.05 15.95 6.64 17.36"/></svg>
                         ) },
                       ]}
@@ -205,11 +205,11 @@ export default function App() {
                       items={[
                         { key: 'export', label: 'Export My Data', icon: (
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 15V5"/></svg>
-                        ), onSelect: exportData },
+                        ), onSelect: () => { closeSettings(); exportData(); } },
                         { divider: true },
                         user ? { key: 'delete', label: 'Delete My Account', destructive: true, icon: (
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M14 11v6"/><path d="M10 11v6"/><path d="M18 6l-1-3H7L6 6"/></svg>
-                        ), onSelect: deleteAccount } : null,
+                        ), onSelect: () => { closeSettings(); deleteAccount(); } } : null,
                         user ? { key: 'logout', label: 'Log Out', icon: (
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
                         ), onSelect: () => { logout(); closeSettings(); } } : { key: 'login', label: 'Log In', icon: (

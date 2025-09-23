@@ -4,15 +4,14 @@ import WeekBar from '../components/WeekBar.jsx'
 import Calendar from '../components/Calendar.jsx'
 import TaskList from '../components/tasks/TaskList.jsx'
 import { endpoints } from '../lib/api.js'
-import { parseQuickAdd } from '../lib/parseQuickAdd.js'
+import AddTaskPill from '../components/tasks/AddTaskPill.jsx'
 
 export default function ToDoPage() {
   const { date } = useDate()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
-  const [text, setText] = useState('')
   const [error, setError] = useState('')
-  const inputRef = useRef(null)
+  const [addOpen, setAddOpen] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -31,11 +30,24 @@ export default function ToDoPage() {
 
   useEffect(() => {
     const onKey = (e) => {
-      const isN = e.key && e.key.toLowerCase() === 'n'
-      if (isN && (e.ctrlKey || e.metaKey)) { inputRef.current?.focus(); e.preventDefault(); }
+      const k = e.key || ''
+      const isN = k === 'n' || k === 'N'
+      const isTypingTarget = (() => {
+        const t = e.target
+        if (!t) return false
+        const tag = (t.tagName || '').toUpperCase()
+        const editable = t.isContentEditable
+        return editable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+      })()
+      // Plain N when not typing
+      if (!isTypingTarget && !e.ctrlKey && !e.metaKey && !e.altKey && isN) {
+        e.preventDefault(); e.stopPropagation();
+        setAddOpen(true)
+      }
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    // Capture phase ensures we get the event before other handlers
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
   }, [])
 
   const progress = useMemo(() => {
@@ -48,18 +60,7 @@ export default function ToDoPage() {
     async reorder(body){ await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/tasks/reorder`, { method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }) },
   }
 
-  const addTask = async () => {
-    if (!text.trim()) return
-    const parsed = parseQuickAdd(text)
-    const { task } = await endpoints.tasks.create(date, parsed.title)
-    // update new fields if present
-    if (parsed.priority !== 'medium' || parsed.labels.length){
-      await endpoints.tasks.update(task._id, { priority: parsed.priority, labels: parsed.labels })
-      task.priority = parsed.priority; task.labels = parsed.labels
-    }
-    setTasks(prev=>[...prev, task])
-    setText('')
-  }
+  
 
   const toggleDone = async (id, done) => {
     const { task } = await endpoints.tasks.update(id, { done })
@@ -85,9 +86,13 @@ export default function ToDoPage() {
             <div style={{ width: `${progress.pct}%`, height: '100%', borderRadius: 9999, background: 'var(--color-accent)' }} />
           </div>
         </div>
-        <div className="flex gap-2 mb-4">
-          <input ref={inputRef} value={text} onChange={e=>setText(e.target.value)} placeholder="New task…  e.g. Write brief !high #work 5pm" className="ui-input flex-1" />
-          <button onClick={addTask} className="ui-button accent">Add Task</button>
+        <div className="mb-4">
+          <AddTaskPill
+            date={date}
+            open={addOpen}
+            onOpenChange={setAddOpen}
+            onAdded={(task) => setTasks(prev => [...prev, task])}
+          />
         </div>
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         {loading ? (

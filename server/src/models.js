@@ -11,7 +11,19 @@ const taskSchema = new mongoose.Schema(
     priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium', index: true },
     labels: { type: [String], default: [] },
     dueAt: { type: Date, default: null },
+    description: { type: String, default: '' },
     notes: { type: String, default: '' },
+    recurrence: {
+      type: new mongoose.Schema({
+        type: { type: String, enum: ['one-time', 'daily', 'weekly', 'monthly', 'yearly'], default: 'daily' },
+        daysOfWeek: { type: [Number], default: [] }, // 0=Sun..6=Sat for weekly
+        dayOfMonth: { type: Number, default: null }, // 1..31 for monthly
+        endDate: { type: String, default: null }, // YYYY-MM-DD
+      }, { _id: false }),
+      default: { type: 'daily', daysOfWeek: [], dayOfMonth: null, endDate: null },
+    },
+    completedOnDates: { type: [String], default: [] }, // YYYY-MM-DD occurrences marked done
+    carryForward: { type: Boolean, default: true, index: true },
   },
   { timestamps: true }
 );

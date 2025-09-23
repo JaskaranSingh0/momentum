@@ -6,10 +6,12 @@ export default function Dropdown({
   items = [],
   disabled = false,
   className = '',
+  onOpenChange,
 }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
   const btnRef = useRef(null)
+  const menuRef = useRef(null)
 
   useEffect(() => {
     function onDocClick(e) {
@@ -32,6 +34,21 @@ export default function Dropdown({
     setOpen(false)
   }
 
+  useEffect(() => {
+    if (typeof onOpenChange !== 'function') return
+    if (open) {
+      // Wait for menu to render then measure
+      const r = () => {
+        const h = menuRef.current ? menuRef.current.offsetHeight : 0
+        try { onOpenChange(true, h) } catch (_) {}
+      }
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(r)
+      else setTimeout(r, 0)
+    } else {
+      try { onOpenChange(false, 0) } catch (_) {}
+    }
+  }, [open, onOpenChange])
+
   return (
     <div className={`ui-dropdown ${className}`} ref={rootRef}>
       <button
@@ -50,7 +67,7 @@ export default function Dropdown({
         </span>
       </button>
       {open && (
-        <div className="ui-dropdown-menu" role="menu">
+        <div className="ui-dropdown-menu" role="menu" ref={menuRef}>
           {items.map((it, idx) => {
             if (it.divider) return <div key={`div-${idx}`} className="ui-menu-divider" />
             const { key, label, icon, destructive, selected } = it
