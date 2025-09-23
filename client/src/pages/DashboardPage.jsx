@@ -1,116 +1,106 @@
-import { useEffect, useState } from 'react'
-import { endpoints } from '../lib/api.js'
-import { useAuth } from '../contexts/AuthContext.jsx'
-import { Bar } from 'react-chartjs-2'
+import { useEffect, useMemo, useState } from 'react'
+import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Tooltip,
-  Legend
+  Filler
 } from 'chart.js'
+import { endpoints } from '../lib/api'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler)
 
 export default function DashboardPage() {
-  const [period, setPeriod] = useState('7')
   const [stats, setStats] = useState(null)
-  const { user, setUser } = useAuth()
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    endpoints.stats(period).then(setStats).catch(()=>setStats(null))
-  }, [period])
+    let mounted = true
+    ;(async () => {
+      try {
+        const data = await endpoints.stats('7d')
+        if (mounted) setStats(data)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    })()
+    return () => (mounted = false)
+  }, [])
 
-  const toggleTheme = async () => {
-    const newTheme = user?.theme === 'dark' ? 'light' : 'dark'
-    await endpoints.theme(newTheme)
-    setUser({ ...user, theme: newTheme })
-  }
-
-  const exportData = async () => {
-    const res = await endpoints.meExport()
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'momentum-export.json'
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const deleteAccount = async () => {
-    const confirm = window.prompt('Type DELETE to permanently delete your account and all data:')
-    if (confirm === 'DELETE') {
-      await endpoints.meDelete()
-      window.location.reload()
+  const chartData = useMemo(() => {
+    const labels = stats?.last7Days?.map(d => d.date) ?? []
+    const completed = stats?.last7Days?.map(d => d.completed) ?? []
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Completed Tasks',
+          data: completed,
+          tension: 0.4,
+          fill: true,
+          borderColor: 'rgba(127, 86, 217, 0.9)',
+          backgroundColor: (ctx) => {
+            const { chart } = ctx
+            const { ctx: g } = chart
+            const gradient = g.createLinearGradient(0, 0, 0, chart.height)
+            gradient.addColorStop(0, 'rgba(127, 86, 217, 0.35)')
+            gradient.addColorStop(1, 'rgba(127, 86, 217, 0.02)')
+            return gradient
+          },
+          pointRadius: 0,
+          borderWidth: 2
+        }
+      ]
     }
-  }
+  }, [stats])
+
+  const options = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { intersect: false, mode: 'index' }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: 'rgba(120,120,120,0.1)' }, beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }), [])
 
   return (
-    <section className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold mb-4">Dashboard</h1>
-        <div className="flex items-center gap-2 mb-4">
-          <label className="text-sm">Period:
-            <select value={period} onChange={e=>setPeriod(e.target.value)} className="ml-2 border rounded px-2 py-1 bg-transparent">
-              <option value="7">Last 7 days</option>
-              <option value="30">Last 30 days</option>
-            </select>
-          </label>
-        </div>
-        {stats ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 border rounded">
-              <div className="text-sm opacity-70">Task Completion Rate</div>
-              <div className="text-3xl font-bold">{Math.round(stats.completionRate*100)}%</div>
-            </div>
-            <div className="p-4 border rounded">
-              <div className="text-sm opacity-70">Productivity Streak</div>
-              <div className="text-3xl font-bold">{stats.prodStreak} days</div>
-            </div>
-            <div className="p-4 border rounded">
-              <div className="text-sm opacity-70">Diary Streak</div>
-              <div className="text-3xl font-bold">{stats.diaryStreak} days</div>
-            </div>
-            <div className="md:col-span-3 p-4 border rounded">
-              <div className="text-sm opacity-70 mb-3">Weekly Task Chart (Completed)</div>
-              <Bar
-                data={{
-                  labels: stats.weekly.dates.map(d=> new Date(d).toLocaleDateString(undefined,{weekday:'short'})),
-                  datasets: [{
-                    label: 'Completed',
-                    data: stats.weekly.completed,
-                    backgroundColor: '#111827',
-                  }]
-                }}
-                options={{ responsive: true, animation: { duration: 600 } }}
-              />
-            </div>
-          </div>
-        ) : <p>Loading stats…</p>}
-      </div>
+    <div className="page-container">
+      <section className="card pad-lg">
+        <h1 className="text-xl mb-1">Dashboard</h1>
+        <p className="text-sm opacity-70">Your weekly progress and streaks.</p>
+      </section>
 
-      <div className="p-4 border rounded space-y-3">
-        <h2 className="text-xl font-semibold">Settings</h2>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm opacity-70">Theme</div>
-            <div className="font-medium">{user?.theme || 'light'}</div>
-          </div>
-          <button className="px-3 py-2 border rounded" onClick={toggleTheme}>Toggle Theme</button>
+      <section className="grid md:grid-cols-3 gap-3 mt-3">
+        <div className="card pad-md">
+          <div className="text-sm opacity-70">Current Streak</div>
+          <div className="text-2xl mt-1">{stats?.currentStreak ?? '—'} days</div>
         </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm opacity-70">Account</div>
-            <div className="font-medium">{user?.email}</div>
-          </div>
-          <div className="space-x-2">
-            <button className="px-3 py-2 border rounded" onClick={exportData}>Export My Data</button>
-            <button className="px-3 py-2 border rounded text-red-600" onClick={deleteAccount}>Delete My Account</button>
-          </div>
+        <div className="card pad-md">
+          <div className="text-sm opacity-70">Tasks Completed</div>
+          <div className="text-2xl mt-1">{stats?.completedTasks ?? 0}</div>
         </div>
-      </div>
-    </section>
+        <div className="card pad-md">
+          <div className="text-sm opacity-70">Diary Entries</div>
+          <div className="text-2xl mt-1">{stats?.diaryEntries ?? 0}</div>
+        </div>
+      </section>
+
+      <section className="card pad-lg mt-3" style={{ height: 300 }}>
+        {loading ? (
+          <div>Loading…</div>
+        ) : (
+          <Line data={chartData} options={options} />
+        )}
+      </section>
+    </div>
   )
 }

@@ -18,10 +18,10 @@ export default function WeekBar(){
   const dayLabel = d => new Date(d).toLocaleDateString(undefined,{weekday:'short'})
 
   return (
-    <div className="flex gap-2 mb-4">
+  <div className="flex gap-2 mb-4">
       {week.map(d=> (
         <button key={d} onClick={()=>setDate(d)}
-          className={`px-3 py-1 rounded border text-sm ${d===date? 'bg-black text-white dark:bg-white dark:text-black' : 'border-zinc-300 dark:border-zinc-700'}`}>
+      className={`chip text-sm ${d===date? 'active' : ''}`}>
           {dayLabel(d)}
         </button>
       ))}

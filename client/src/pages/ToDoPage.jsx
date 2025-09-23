@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useDate } from '../contexts/DateContext.jsx'
 import WeekBar from '../components/WeekBar.jsx'
 import Calendar from '../components/Calendar.jsx'
+import TaskList from '../components/tasks/TaskList.jsx'
 import { endpoints } from '../lib/api.js'
+import { parseQuickAdd } from '../lib/parseQuickAdd.js'
 
 export default function ToDoPage() {
   const { date } = useDate()
@@ -10,6 +12,7 @@ export default function ToDoPage() {
   const [loading, setLoading] = useState(true)
   const [text, setText] = useState('')
   const [error, setError] = useState('')
+  const inputRef = useRef(null)
 
   const load = async () => {
     setLoading(true)
@@ -26,9 +29,34 @@ export default function ToDoPage() {
 
   useEffect(()=>{ load() }, [date])
 
+  useEffect(() => {
+    const onKey = (e) => {
+      const isN = e.key && e.key.toLowerCase() === 'n'
+      if (isN && (e.ctrlKey || e.metaKey)) { inputRef.current?.focus(); e.preventDefault(); }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  const progress = useMemo(() => {
+    const total = tasks.length
+    const done = tasks.filter(t => t.done).length
+    return { total, done, pct: total ? Math.round((done/total)*100) : 0 }
+  }, [tasks])
+
+  const api = {
+    async reorder(body){ await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/tasks/reorder`, { method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }) },
+  }
+
   const addTask = async () => {
     if (!text.trim()) return
-    const { task } = await endpoints.tasks.create(date, text.trim())
+    const parsed = parseQuickAdd(text)
+    const { task } = await endpoints.tasks.create(date, parsed.title)
+    // update new fields if present
+    if (parsed.priority !== 'medium' || parsed.labels.length){
+      await endpoints.tasks.update(task._id, { priority: parsed.priority, labels: parsed.labels })
+      task.priority = parsed.priority; task.labels = parsed.labels
+    }
     setTasks(prev=>[...prev, task])
     setText('')
   }
@@ -44,27 +72,41 @@ export default function ToDoPage() {
   }
 
   return (
-    <section>
-      <h1 className="text-2xl font-semibold mb-4">To-Do List</h1>
-      <Calendar />
-      <WeekBar />
-      <div className="flex gap-2 mb-4">
-        <input value={text} onChange={e=>setText(e.target.value)} placeholder="New task…" className="flex-1 border rounded px-3 py-2 bg-transparent" />
-        <button onClick={addTask} className="px-3 py-2 border rounded">Add Task</button>
+    <section className="page-container">
+      <h1 className="text-4xl mb-6">To‑Do List</h1>
+      <div className="card pad-lg">
+        <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Calendar />
+          <WeekBar />
+        </div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm opacity-70">{progress.done}/{progress.total} complete</div>
+          <div style={{ width: 160, height: 8, borderRadius: 9999, background: 'rgba(127, 127, 127, 0.15)' }}>
+            <div style={{ width: `${progress.pct}%`, height: '100%', borderRadius: 9999, background: 'var(--color-accent)' }} />
+          </div>
+        </div>
+        <div className="flex gap-2 mb-4">
+          <input ref={inputRef} value={text} onChange={e=>setText(e.target.value)} placeholder="New task…  e.g. Write brief !high #work 5pm" className="ui-input flex-1" />
+          <button onClick={addTask} className="ui-button accent">Add Task</button>
+        </div>
+        {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+        {loading ? (
+          <div className="space-y-2">
+            <div className="h-10 rounded-xl" style={{ background: 'rgba(127,127,127,0.15)' }} />
+            <div className="h-10 rounded-xl" style={{ background: 'rgba(127,127,127,0.15)' }} />
+            <div className="h-10 rounded-xl" style={{ background: 'rgba(127,127,127,0.15)' }} />
+          </div>
+        ) : (
+          <>
+            <TaskList date={date} tasks={tasks} setTasks={setTasks} api={{
+              update: (id, body) => endpoints.tasks.update(id, body).then(r=>r.task),
+              remove: (id) => endpoints.tasks.remove(id),
+              reorder: (body) => api.reorder(body)
+            }} />
+            {tasks.length===0 && <div className="opacity-70 py-2">No tasks yet.</div>}
+          </>
+        )}
       </div>
-      {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
-      {loading ? <p>Loading…</p> : (
-        <ul className="space-y-2">
-          {tasks.map(t=> (
-            <li key={t._id} className="flex items-center gap-2 p-2 border rounded">
-              <input type="checkbox" checked={t.done} onChange={e=>toggleDone(t._id, e.target.checked)} />
-              <span className={t.done? 'line-through opacity-60 flex-1' : 'flex-1'}>{t.text}</span>
-              <button onClick={()=>remove(t._id)} className="text-sm text-red-600">Remove</button>
-            </li>
-          ))}
-          {tasks.length===0 && <li className="opacity-70">No tasks yet.</li>}
-        </ul>
-      )}
     </section>
   )
 }

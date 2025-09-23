@@ -34,13 +34,16 @@ export default function DiaryPage() {
   }, [text, date])
 
   return (
-    <section>
-      <h1 className="text-2xl font-semibold mb-4">Daily Diary</h1>
-      <Calendar />
-      <WeekBar />
-      <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Write your thoughts…"
-        className="w-full h-64 border rounded p-3 bg-transparent" />
-      <div className="text-sm opacity-70 mt-2">{status}</div>
+    <section className="page-container">
+      <h1 className="text-4xl mb-6">Daily Diary</h1>
+      <div className="card pad-lg">
+        <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Calendar />
+          <WeekBar />
+        </div>
+        <textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Write your thoughts…" className="ui-textarea" />
+        <div className="text-sm opacity-70 mt-2">{status}</div>
+      </div>
     </section>
   )
 }
