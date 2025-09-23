@@ -121,16 +121,36 @@ export default function App() {
               <NavLink to="/" ref={homeRef}
                 className={({isActive}) => `nav-pill-link ${isActive ? 'is-active' : ''}`}
                 onMouseEnter={() => setHoverIndex(0)}>
-                <p>Home</p>
+                <span className="nav-link-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                  </svg>
+                </span>
+                <p>Tasks</p>
               </NavLink>
               <NavLink to="/diary" ref={diaryRef}
                 className={({isActive}) => `nav-pill-link ${isActive ? 'is-active' : ''}`}
                 onMouseEnter={() => setHoverIndex(1)}>
+                <span className="nav-link-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>
+                  </svg>
+                </span>
                 <p>Diary</p>
               </NavLink>
               <NavLink to="/dashboard" ref={dashRef}
                 className={({isActive}) => `nav-pill-link ${isActive ? 'is-active' : ''}`}
                 onMouseEnter={() => setHoverIndex(2)}>
+                <span className="nav-link-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
+                  </svg>
+                </span>
                 <p>Dashboard</p>
               </NavLink>
               {!settingsOpen && (
