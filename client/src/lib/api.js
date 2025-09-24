@@ -26,7 +26,7 @@ export const endpoints = {
   },
   diary: {
     get: (date) => api(`/api/diary?date=${encodeURIComponent(date)}`),
-    put: (date, text) => api('/api/diary', { method: 'PUT', body: JSON.stringify({ date, text }) }),
+    put: (date, text, mood) => api('/api/diary', { method: 'PUT', body: JSON.stringify({ date, text, mood }) }),
   },
   stats: (period) => api(`/api/stats?period=${period}`),
   meExport: () => fetch(`${BASE}/api/me/export`, { credentials: 'include' }),

@@ -177,3 +177,45 @@ body { background: var(--color-background); color: var(--color-primary); }
 .task-preview-pill{ margin-top:6px; border:1px solid var(--border-hairline); border-radius:18px; padding:14px 16px 16px; background: var(--surface-translucent); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); box-shadow: var(--jw-shadow-1); animation: preview-in .4s var(--easing-pill); }
 @keyframes preview-in{ from{ transform: translateY(4px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
 
+/* Focus mode diary textarea adjustments */
+.focus-mode-area{ min-height:70vh; font-size:1.05rem; line-height:1.55; }
+.dark .focus-mode-area{ background: rgba(255,255,255,0.015); }
+
+/* Visually hidden (screen reader only) */
+.sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+
+/* Mood morphing pill */
+.mood-pill-wrap{ border:1px solid var(--border-hairline); border-radius:18px; background: var(--surface-translucent); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); transition: box-shadow var(--duration-pill) ease, border-color var(--duration-pill) ease; }
+.mood-pill-wrap.open{ box-shadow: 0 0 0 2px rgba(107,98,246,0.25), var(--jw-shadow-1); }
+.mood-pill-header{ display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; user-select:none; }
+.mood-pill-title{ font-weight:500; letter-spacing:.5px; font-size:13px; opacity:.85; }
+.mood-pill-current{ flex:1; font-size:18px; }
+.mood-pill-caret{ font-size:11px; opacity:.6; }
+.mood-pill-content{ overflow:hidden; max-height:0; opacity:0; transition: max-height var(--duration-pill) var(--easing-pill), opacity var(--duration-pill) ease; padding:0 10px; }
+.mood-pill-wrap.open .mood-pill-content{ max-height:240px; opacity:1; padding:6px 10px 14px; }
+.mood-grid{ display:grid; grid-template-columns: repeat(auto-fill,minmax(90px,1fr)); gap:8px; }
+.mood-select-btn{ display:flex; flex-direction:column; align-items:center; gap:4px; border:1px solid var(--border-hairline); background:transparent; border-radius:14px; padding:8px 6px 9px; font-size:11px; letter-spacing:.3px; transition: background-color .25s ease, border-color .25s ease, transform .25s var(--easing-pill); }
+.mood-select-btn:hover{ background: rgba(0,0,0,0.04); }
+.dark .mood-select-btn:hover{ background: rgba(255,255,255,0.06); }
+.mood-select-btn:active{ transform: scale(.97); }
+.mood-select-btn.active{ background: var(--chip-active-bg); border-color: var(--chip-active-border); }
+.mood-emoji{ font-size:20px; line-height:1; }
+.mood-label-text{ opacity:.75; }
+
+/* Mood Bar */
+.mood-bar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.mood-bar-label{ font-size:11px; font-weight:600; letter-spacing:.8px; opacity:.65; }
+.mood-bar-pills{ display:flex; flex-wrap:wrap; gap:6px; }
+.mood-pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px 6px 10px; border:1px solid var(--border-hairline); background:transparent; border-radius:9999px; font-size:13px; line-height:1; transition: background-color var(--duration-pill) ease, border-color var(--duration-pill) ease, color var(--duration-pill) ease, transform var(--duration-pill) var(--easing-pill); }
+.mood-pill:active{ transform: scale(.97); }
+.mood-pill .mood-emoji{ font-size:16px; line-height:1; }
+.mood-pill .mood-name{ font-size:12px; opacity:.85; }
+.mood-pill.active{ background: var(--chip-active-bg); border-color: var(--chip-active-border); }
+
+/* Optional color accents per mood when active */
+.mood-pill.active[data-mood="happy"], .mood-pill.active[data-mood="excited"]{ box-shadow: 0 0 0 1px rgba(255,200,0,.25); }
+.mood-pill.active[data-mood="sad"], .mood-pill.active[data-mood="anxious"]{ box-shadow: 0 0 0 1px rgba(80,160,255,.25); }
+.mood-pill.active[data-mood="stressed"], .mood-pill.active[data-mood="angry"]{ box-shadow: 0 0 0 1px rgba(255,90,90,.3); }
+.mood-pill.active[data-mood="calm"], .mood-pill.active[data-mood="focused"]{ box-shadow: 0 0 0 1px rgba(140,255,200,.25); }
+.mood-pill.active[data-mood="tired"], .mood-pill.active[data-mood="meh"]{ box-shadow: 0 0 0 1px rgba(180,180,180,.25); }
+

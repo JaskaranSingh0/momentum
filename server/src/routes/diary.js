@@ -16,11 +16,17 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 router.put('/', requireAuth, async (req, res) => {
-  const { date, text } = req.body;
+  const { date, text, mood } = req.body;
   if (!date || typeof text !== 'string') return res.status(400).json({ error: 'date and text required' });
+  const allowedMoods = ['sad','meh','calm','happy','tired','stressed','anxious','excited','focused','angry'];
+  if (mood && !allowedMoods.includes(mood)) {
+    return res.status(400).json({ error: 'invalid mood' });
+  }
+  const set = { text };
+  if (typeof mood !== 'undefined') set.mood = mood || null;
   const entry = await DiaryEntry.findOneAndUpdate(
     { userId: req.user._id, date },
-    { $set: { text } },
+    { $set: set },
     { upsert: true, new: true }
   );
   res.json({ entry });

@@ -32,7 +32,13 @@ const diarySchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true, required: true },
     date: { type: String, index: true, required: true }, // YYYY-MM-DD
-    text: { type: String, default: '' }
+    text: { type: String, default: '' },
+    // Expanded mood palette: existing values preserved for backwards compatibility
+    mood: { type: String, default: null, enum: [
+      null,
+      'sad', 'meh', 'calm', 'happy',
+      'tired', 'stressed', 'anxious', 'excited', 'focused', 'angry'
+    ] }
   },
   { timestamps: true }
 );
