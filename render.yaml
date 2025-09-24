@@ -11,7 +11,7 @@ services:
     buildCommand: |
       npm install
       cd ../client
-      npm install
+      npm install --include=dev
       npm run build
       cd ../server
     startCommand: npm start
@@ -20,6 +20,9 @@ services:
         value: 20
       - key: NODE_ENV
         value: production
+      # Ensure devDependencies are available during build steps
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
       - key: CLIENT_URL
         value: self
       # Placeholder – replace with your actual deployed URL once known:
