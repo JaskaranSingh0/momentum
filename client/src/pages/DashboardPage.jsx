@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -202,6 +202,24 @@ export default function DashboardPage() {
     try { return JSON.parse(localStorage.getItem('dashboardTileOrder')||'[]') } catch { return [] }
   })
   const [customizing, setCustomizing] = useState(false)
+  const [draggingId, setDraggingId] = useState(null)
+  const [dragOverId, setDragOverId] = useState(null)
+  const [periodOpen, setPeriodOpen] = useState(false)
+  const periodBtnRef = useRef(null)
+  const periodMenuRef = useRef(null)
+
+  useEffect(() => {
+    if (!periodOpen) return
+    const handleClick = (e) => {
+      if (!periodBtnRef.current || !periodMenuRef.current) return
+      if (periodBtnRef.current.contains(e.target) || periodMenuRef.current.contains(e.target)) return
+      setPeriodOpen(false)
+    }
+    const handleKey = (e) => { if (e.key === 'Escape') setPeriodOpen(false) }
+    window.addEventListener('mousedown', handleClick)
+    window.addEventListener('keydown', handleKey)
+    return () => { window.removeEventListener('mousedown', handleClick); window.removeEventListener('keydown', handleKey) }
+  }, [periodOpen])
   useEffect(()=>{
     if(!tileOrder.length){ setTileOrder(defaultTileOrder) }
   },[]) // eslint-disable-line
@@ -216,15 +234,58 @@ export default function DashboardPage() {
   }
   const removeMissing = (order) => order.filter(id => id !== 'focusDay' || focusDay)
 
-  const Tile = ({ id, children, span }) => (
-    <div className={`card pad-md flex flex-col gap-1 ${id==='chart' ? 'pad-lg' : ''} ${span||''}`} data-tile={id}>
-      {children}
-      {customizing && id!=='chart' && <div className="mt-2 flex gap-1">
-        <button className="ui-btn-xs" onClick={()=>moveTile(id,-1)} aria-label="Move up">↑</button>
-        <button className="ui-btn-xs" onClick={()=>moveTile(id,1)} aria-label="Move down">↓</button>
-      </div>}
-    </div>
-  )
+  const handleDragStart = (e,id) => {
+    e.dataTransfer.effectAllowed = 'move'
+    try { e.dataTransfer.setData('text/plain', id) } catch {}
+    setDraggingId(id)
+  }
+  const handleDragOver = (e,id) => {
+    if (!customizing) return
+    e.preventDefault()
+    if (id !== dragOverId) setDragOverId(id)
+  }
+  const handleDrop = (e,id) => {
+    if (!customizing) return
+    e.preventDefault()
+    const dragId = draggingId || (e.dataTransfer?.getData('text/plain'))
+    if (!dragId || dragId === id) { setDraggingId(null); setDragOverId(null); return }
+    const order = [...tileOrder]
+    const from = order.indexOf(dragId)
+    const to = order.indexOf(id)
+    if (from === -1 || to === -1) { setDraggingId(null); setDragOverId(null); return }
+    order.splice(from,1)
+    order.splice(to,0,dragId)
+    persistOrder(order)
+    setDraggingId(null)
+    setDragOverId(null)
+  }
+  const handleDragEnd = () => { setDraggingId(null); setDragOverId(null) }
+
+  const Tile = ({ id, children, span }) => {
+    const isDragTarget = customizing && dragOverId === id && draggingId !== id
+    const isDragging = customizing && draggingId === id
+    const draggable = customizing
+    return (
+      <div
+        className={`card pad-md flex flex-col gap-1 ${id==='chart' ? 'pad-lg' : ''} ${span||''} ${isDragTarget ? 'ring-2 ring-[var(--color-accent)] ring-offset-0' : ''} ${isDragging ? 'opacity-60' : ''}`}
+        data-tile={id}
+        draggable={draggable}
+        onDragStart={(e)=>handleDragStart(e,id)}
+        onDragOver={(e)=>handleDragOver(e,id)}
+        onDrop={(e)=>handleDrop(e,id)}
+        onDragEnd={handleDragEnd}
+      >
+        {customizing && <div className="flex items-center justify-between mb-1 text-[11px] opacity-60 select-none">
+          <span className="cursor-grab">☰ Drag</span>
+          <div className="flex gap-1">
+            <button className="ui-btn-xs" onClick={()=>moveTile(id,-1)} aria-label="Move up" type="button">↑</button>
+            <button className="ui-btn-xs" onClick={()=>moveTile(id,1)} aria-label="Move down" type="button">↓</button>
+          </div>
+        </div>}
+        {children}
+      </div>
+    )
+  }
 
   const tiles = {
     prodStreak: (<Tile id="prodStreak"><div className="text-sm opacity-70">Productivity Streak</div><div className="text-2xl mt-1">{stats?.prodStreak ?? '—'}<span className="text-sm opacity-60 ml-1">days</span></div></Tile>),
@@ -249,41 +310,72 @@ export default function DashboardPage() {
 
   return (
     <div className="page-container">
-      <section className="card pad-lg mb-3">
+      <section className={`card pad-lg mb-3 dashboard-header ${periodOpen ? 'dashboard-header-open' : ''}`}> 
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-xl mb-1">Dashboard</h1>
             <p className="text-sm opacity-70">Your productivity & reflection metrics.</p>
           </div>
           <div className="flex items-center gap-3 text-sm flex-wrap">
-            <div className="flex items-center gap-2">
-              <label htmlFor="period" className="opacity-70">Period:</label>
-              <select id="period" className="ui-select !w-32" value={period} onChange={e=>setPeriod(e.target.value)}>
-                <option value="7">Last 7 days</option>
-                <option value="14">Last 14 days</option>
-                <option value="30">Last 30 days</option>
-                <option value="60">Last 60 days</option>
-                <option value="90">Last 90 days</option>
-              </select>
+            <div className="ui-dropdown" style={{ minWidth: 160 }}>
+              <button
+                ref={periodBtnRef}
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={periodOpen}
+                className="ui-dropdown-trigger !py-2 !px-3"
+                onClick={()=>setPeriodOpen(o=>!o)}
+              >
+                <span className="dropdown-icon" aria-hidden>🗓️</span>
+                <span className="dropdown-label">{(() => {
+                  switch(period){
+                    case '7': return 'Last 7 days'
+                    case '14': return 'Last 14 days'
+                    case '30': return 'Last 30 days'
+                    case '60': return 'Last 60 days'
+                    case '90': return 'Last 90 days'
+                    default: return 'Period'
+                  }
+                })()}</span>
+                <span className="dropdown-caret" aria-hidden>▾</span>
+              </button>
+              {periodOpen && (
+                <div ref={periodMenuRef} className="ui-dropdown-menu" role="listbox" aria-label="Select period">
+                  {[
+                    ['7','Last 7 days'],
+                    ['14','Last 14 days'],
+                    ['30','Last 30 days'],
+                    ['60','Last 60 days'],
+                    ['90','Last 90 days']
+                  ].map(([val,label]) => (
+                    <button key={val} role="option" aria-selected={period===val} className="ui-menu-item" onClick={() => { setPeriod(val); setPeriodOpen(false) }}>
+                      <span className="menu-label">{label}</span>
+                      {period===val && <span className="menu-check">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <button className="ui-btn-sm" onClick={()=>setCustomizing(c=>!c)}>{customizing ? 'Done' : 'Customize Layout'}</button>
           </div>
         </div>
       </section>
 
-      <div className="grid md:grid-cols-5 gap-3 auto-rows-[minmax(110px,auto)]">
+      <div className="grid md:grid-cols-5 gap-3 auto-rows-[minmax(110px,auto)]" aria-label="Dashboard tiles" role="list" style={{transition:'margin-top .3s ease', marginTop: periodOpen? '4px':'0'}}>
         {activeOrder.map(id => tiles[id])}
       </div>
 
       {customizing && (
         <div className="card pad-md mt-4">
           <h2 className="text-sm opacity-70 mb-2">Reorder Tiles</h2>
-          <ul className="flex flex-col gap-1 text-xs">
+          <ul className="flex flex-col gap-1 text-xs" aria-label="Tile order list">
             {tileOrder.map(id => (
-              <li key={id} className="flex items-center gap-2">
+              <li key={id} className={`flex items-center gap-2 ${dragOverId===id ? 'bg-[rgba(127,86,217,0.15)]' : ''}`} draggable={customizing}
+                  onDragStart={(e)=>handleDragStart(e,id)} onDragOver={(e)=>handleDragOver(e,id)} onDrop={(e)=>handleDrop(e,id)} onDragEnd={handleDragEnd}>
+                <span className="cursor-grab">☰</span>
                 <span className="flex-1 truncate">{id}</span>
-                <button className="ui-btn-xs" onClick={()=>moveTile(id,-1)}>↑</button>
-                <button className="ui-btn-xs" onClick={()=>moveTile(id,1)}>↓</button>
+                <button className="ui-btn-xs" onClick={()=>moveTile(id,-1)} type="button">↑</button>
+                <button className="ui-btn-xs" onClick={()=>moveTile(id,1)} type="button">↓</button>
               </li>
             ))}
           </ul>

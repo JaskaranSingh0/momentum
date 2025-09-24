@@ -3,7 +3,7 @@ import { useDate } from '../contexts/DateContext.jsx'
 
 function toYMD(d){ return d.toISOString().slice(0,10) }
 
-export default function WeekBar(){
+export default function WeekBar({ inline=false }){
   const { date, setDate } = useDate()
   const week = useMemo(() => {
     const now = new Date(date)
@@ -18,13 +18,14 @@ export default function WeekBar(){
   const dayLabel = d => new Date(d).toLocaleDateString(undefined,{weekday:'short'})
 
   return (
-  <div className="flex gap-2 mb-4">
+  <div className={`flex gap-2${inline? ' week-inline' : ' mb-4'}`}>
       {week.map(d=> (
         <button key={d} onClick={()=>setDate(d)}
       className={`chip text-sm ${d===date? 'active' : ''}`}>
           {dayLabel(d)}
         </button>
       ))}
+    
     </div>
   )
 }

@@ -167,8 +167,7 @@ export default function DiaryPage() {
   { key:'angry', icon:'😡', label:'Angry' },
   ]
 
-  // Prompt system removed
-  const changeDay = (delta) => { const d = new Date(date + 'T00:00:00'); d.setDate(d.getDate()+delta); setDate(fmt(d)) }
+  // Prompt system removed (day-to-day navigation removed per request)
   const wordCountPct = Math.min(100, Math.round((wordCount / wordGoal) * 100))
   // Export removed (global data export exists in settings)
 
@@ -177,18 +176,15 @@ export default function DiaryPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-4xl">Daily Diary</h1>
         <div className="flex items-center gap-2 text-sm">
-          <button className="ui-button" onClick={()=>changeDay(-1)} aria-label="Previous day">◀</button>
-          <div className="opacity-70">{date}</div>
-          <button className="ui-button" onClick={()=>changeDay(1)} aria-label="Next day">▶</button>
           <button className={`ui-button ${focusMode ? 'accent':''}`} onClick={()=>setFocusMode(f=>!f)}>{focusMode ? 'Exit Focus' : 'Focus'}</button>
-          {/* Export button removed – consolidated under global data export in settings */}
         </div>
       </div>
       <div className="card pad-lg">
         {!focusMode && (
-          <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3 transition-opacity">
-            <Calendar />
-            <WeekBar />
+          <div className="diary-date-toolbar mb-4 transition-opacity">
+            <Calendar inline />
+            <div className="date-toolbar-sep" aria-hidden="true" />
+            <WeekBar inline />
           </div>
         )}
         {/* Mood morphing pill + goal */}
