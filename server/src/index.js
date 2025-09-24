@@ -102,10 +102,29 @@ if (googleEnabled) {
     passport.authenticate('google', { failureRedirect: '/auth/failed' }),
     (req, res) => res.redirect(CLIENT_URL === 'self' ? '/' : CLIENT_URL)
   );
+  // Temporary, non-sensitive debug endpoint to verify OAuth configuration
+  app.get('/auth/debug', (_req, res) => {
+    const cbMode = CLIENT_URL === 'self' ? 'relative' : 'absolute';
+    const callbackTarget = CLIENT_URL === 'self'
+      ? '/auth/google/callback'
+      : (process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback');
+    res.json({
+      googleEnabled: true,
+      clientMode: CLIENT_URL,
+      callbackMode: cbMode,
+      callbackTarget
+    });
+  });
 } else {
   app.get('/auth/google', (_req, res) => res.status(503).json({ error: 'Google OAuth not configured' }));
   app.get('/auth/google/callback', (_req, res) => res.status(503).json({ error: 'Google OAuth not configured' }));
   app.get('/auth/google/callback/', (_req, res) => res.status(503).json({ error: 'Google OAuth not configured' }));
+  app.get('/auth/debug', (_req, res) => {
+    res.json({
+      googleEnabled: false,
+      clientMode: CLIENT_URL
+    });
+  });
 }
 
 app.get('/auth/failed', (_req, res) => {

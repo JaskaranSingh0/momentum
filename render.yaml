@@ -26,6 +26,6 @@ services:
       - key: CLIENT_URL
         value: self
       - key: GOOGLE_CALLBACK_URL
-        value: https://momentum.onrender.com/auth/google/callback
+        value: https://momentum-b3ns.onrender.com/auth/google/callback
       # Secrets to set in dashboard (not committed):
       # MONGO_URI, SESSION_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, COOKIE_SECURE (true/false), COOKIE_SAMESITE (optional)

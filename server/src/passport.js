@@ -42,7 +42,12 @@ if (googleEnabled) {
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback'
+        // In single-service mode (CLIENT_URL=self), build callback from current host to avoid stale domains
+        callbackURL: (process.env.CLIENT_URL === 'self')
+          ? '/auth/google/callback'
+          : (process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback'),
+        // Ensure absolute callback uses X-Forwarded-* headers behind Render's proxy
+        proxy: true
       },
       async (_accessToken, _refreshToken, profile, done) => {
         try {
