@@ -171,3 +171,9 @@ body { background: var(--color-background); color: var(--color-primary); }
 /* Description textarea half-width and reduced height */
 .desc-textarea{ width:50%; min-height:8rem; }
 
+/* Hover task preview pill transitions */
+.task-preview-wrapper{ overflow:hidden; max-height:0; opacity:0; transition: max-height .45s var(--easing-pill), opacity .35s ease; }
+.task-preview-wrapper.open{ max-height:260px; opacity:1; }
+.task-preview-pill{ margin-top:6px; border:1px solid var(--border-hairline); border-radius:18px; padding:14px 16px 16px; background: var(--surface-translucent); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); box-shadow: var(--jw-shadow-1); animation: preview-in .4s var(--easing-pill); }
+@keyframes preview-in{ from{ transform: translateY(4px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
+

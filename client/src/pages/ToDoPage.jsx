@@ -86,14 +86,7 @@ export default function ToDoPage() {
             <div style={{ width: `${progress.pct}%`, height: '100%', borderRadius: 9999, background: 'var(--color-accent)' }} />
           </div>
         </div>
-        <div className="mb-4">
-          <AddTaskPill
-            date={date}
-            open={addOpen}
-            onOpenChange={setAddOpen}
-            onAdded={(task) => setTasks(prev => [...prev, task])}
-          />
-        </div>
+        <div className="mb-4" />
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         {loading ? (
           <div className="space-y-2">
@@ -103,11 +96,25 @@ export default function ToDoPage() {
           </div>
         ) : (
           <>
-            <TaskList date={date} tasks={tasks} setTasks={setTasks} api={{
-              update: (id, body) => endpoints.tasks.update(id, body).then(r=>r.task),
-              remove: (id) => endpoints.tasks.remove(id),
-              reorder: (body) => api.reorder(body)
-            }} />
+            <TaskList
+              date={date}
+              tasks={tasks}
+              setTasks={setTasks}
+              api={{
+                update: (id, body) => endpoints.tasks.update(id, body).then(r=>r.task),
+                remove: (id) => endpoints.tasks.remove(id),
+                reorder: (body) => api.reorder(body)
+              }}
+              addTaskPill={
+                <AddTaskPill
+                  date={date}
+                  open={addOpen}
+                  onOpenChange={setAddOpen}
+                  categories={[...new Set(tasks.map(t => Array.isArray(t.labels) && t.labels.length ? t.labels[0].toUpperCase() : null))].filter(Boolean)}
+                  onAdded={(task) => setTasks(prev => [...prev, task])}
+                />
+              }
+            />
             {tasks.length===0 && <div className="opacity-70 py-2">No tasks yet.</div>}
           </>
         )}

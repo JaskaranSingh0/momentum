@@ -3,7 +3,7 @@ import { endpoints } from '../../lib/api.js'
 import { parseQuickAdd } from '../../lib/parseQuickAdd.js'
 import Dropdown from '../Dropdown.jsx'
 
-export default function AddTaskPill({ date, onAdded, open, onOpenChange }) {
+export default function AddTaskPill({ date, onAdded, open, onOpenChange, categories = [] }) {
   const [title, setTitle] = useState('')
   const [priority, setPriority] = useState('medium')
   const [description, setDescription] = useState('')
@@ -14,6 +14,12 @@ export default function AddTaskPill({ date, onAdded, open, onOpenChange }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [repeatMenuHeight, setRepeatMenuHeight] = useState(0)
+  // Category selection state
+  // selectedCategory: null = untouched; '' = explicit none; string = chosen category
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [creatingNewCat, setCreatingNewCat] = useState(false)
+  const [newCategoryInput, setNewCategoryInput] = useState('')
+  const newCatRef = useRef(null)
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -26,7 +32,7 @@ export default function AddTaskPill({ date, onAdded, open, onOpenChange }) {
 
   const close = () => {
     onOpenChange?.(false)
-  setTimeout(() => { setTitle(''); setPriority('medium'); setDescription(''); setDueDate(''); setRecurrenceType('daily'); setWeeklyDays([]); setMonthlyDom(''); setError('') }, 200)
+  setTimeout(() => { setTitle(''); setPriority('medium'); setDescription(''); setDueDate(''); setRecurrenceType('daily'); setWeeklyDays([]); setMonthlyDom(''); setError(''); setSelectedCategory(null); setCreatingNewCat(false); setNewCategoryInput('') }, 200)
   }
 
   const handleAdd = async () => {
@@ -39,6 +45,19 @@ export default function AddTaskPill({ date, onAdded, open, onOpenChange }) {
       if (priority && priority !== 'medium') parsed.priority = priority
       // If user manually picked a priority, override parsed one
       if (priority && priority !== 'medium') parsed.priority = priority
+      // Category override logic
+      if (selectedCategory !== null) {
+        if (selectedCategory === '') {
+          parsed.labels = []
+        } else if (typeof selectedCategory === 'string' && selectedCategory.trim()) {
+          parsed.labels = [selectedCategory.trim().toUpperCase()]
+        }
+      }
+      if (creatingNewCat && newCategoryInput.trim()) {
+        parsed.labels = [newCategoryInput.trim().toUpperCase()]
+      }
+      // Normalize first label (category) to uppercase if present
+      if (parsed.labels && parsed.labels.length) parsed.labels[0] = parsed.labels[0].toUpperCase()
       const rec = (() => {
         if (recurrenceType === 'weekly') return { type: 'weekly', daysOfWeek: weeklyDays }
         if (recurrenceType === 'monthly') return { type: 'monthly', dayOfMonth: monthlyDom ? Number(monthlyDom) : null }
@@ -107,9 +126,48 @@ export default function AddTaskPill({ date, onAdded, open, onOpenChange }) {
             <div className="flex items-center gap-6">
               {['low','medium','high'].map(p => (
                 <button key={p} type="button" className={`chip ${priority===p ? 'active': ''}`} onClick={() => setPriority(p)}>
-                  {p.charAt(0).toUpperCase()+p.slice(1)}
+                  {p.toUpperCase()}
                 </button>
               ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-sm opacity-70" style={{minWidth:56}}>Category</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button type="button" className={`chip ${selectedCategory === '' ? 'active' : ''}`} onClick={() => setSelectedCategory('')}>GENERAL</button>
+              {categories.filter(Boolean).sort((a,b)=>a.localeCompare(b)).map(cat => (
+                <button
+                  type="button"
+                  key={cat}
+                  className={`chip ${selectedCategory === cat ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(c => c === cat ? null : cat)}
+                  title={`Set category to ${cat}`}
+                >{cat}</button>
+              ))}
+              {!creatingNewCat && (
+                <button type="button" className={`chip ${creatingNewCat ? 'active' : ''}`} onClick={() => { setCreatingNewCat(true); setTimeout(()=>newCatRef.current?.focus(), 0) }}>+ New</button>
+              )}
+              {creatingNewCat && (
+                <input
+                  ref={newCatRef}
+                  className="ui-input"
+                  style={{ width: 140 }}
+                  placeholder="New category"
+                  value={newCategoryInput}
+                  onChange={e => setNewCategoryInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      if (newCategoryInput.trim()) {
+                        setSelectedCategory(newCategoryInput.trim())
+                        setCreatingNewCat(false)
+                      }
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault(); setCreatingNewCat(false)
+                    }
+                  }}
+                />
+              )}
             </div>
           </div>
           {recurrenceType === 'one-time' && (

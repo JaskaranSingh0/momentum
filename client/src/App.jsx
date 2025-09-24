@@ -64,6 +64,40 @@ export default function App() {
   // Handlers
   const toggleSettings = () => setSettingsOpen(o => !o)
   const closeSettings = () => setSettingsOpen(false)
+  
+  // Handle Escape key to close settings
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && settingsOpen) {
+        closeSettings()
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [settingsOpen])
+  
+  // Handle clicking outside settings to close
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (settingsOpen) {
+        // Check if the click was outside the settings panel
+        const isOutsideClick = e.target.closest('.settings-panel-inside') === null && 
+                              e.target.closest('.nav-icon-btn') === null
+        
+        if (isOutsideClick) {
+          closeSettings()
+        }
+      }
+    }
+    
+    document.addEventListener('click', handleOutsideClick)
+    return () => {
+      document.removeEventListener('click', handleOutsideClick)
+    }
+  }, [settingsOpen])
 
   const handleThemeChange = async (v) => {
     setPrefTheme(v)

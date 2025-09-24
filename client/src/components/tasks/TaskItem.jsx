@@ -30,12 +30,10 @@ export default function TaskItem({ task, onToggle, onDelete, onEdit, selectionMo
       </div>
 
       {task.priority ? (
-        <span className="text-[11px] px-2 py-1 rounded-full border" style={{ borderColor: 'var(--border-hairline)' }}>{task.priority}</span>
+        <span className="text-[11px] px-2 py-1 rounded-full border" style={{ borderColor: 'var(--border-hairline)' }}>{String(task.priority).toUpperCase()}</span>
       ) : null}
 
-      {Array.isArray(task.labels) && task.labels.slice(0,2).map(l => (
-        <span key={l} className="text-[11px] px-2 py-1 rounded-full border" style={{ borderColor: 'var(--border-hairline)' }}>#{l}</span>
-      ))}
+      {/* Category/labels removed from inline row per request (still available in hover preview & edit pill) */}
 
       <button aria-label="Edit task" onClick={() => onEdit?.(task)} className="opacity-0 group-hover:opacity-100 transition-opacity mr-2">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Dropdown from '../Dropdown.jsx'
 
-export default function EditTaskPill({ task, onSave, onCancel }) {
+export default function EditTaskPill({ task, onSave, onCancel, categories = [] }) {
   const [title, setTitle] = useState(task.text || '')
   const [priority, setPriority] = useState(task.priority || 'medium')
   const [description, setDescription] = useState(task.description || '')
@@ -12,6 +12,12 @@ export default function EditTaskPill({ task, onSave, onCancel }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [repeatMenuHeight, setRepeatMenuHeight] = useState(0)
+  // Category editing
+  const initialCategory = (Array.isArray(task.labels) && task.labels.length ? task.labels[0].toUpperCase() : '')
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory) // '' means none
+  const [creatingNewCat, setCreatingNewCat] = useState(false)
+  const [newCatValue, setNewCatValue] = useState('')
+  const newCatInputRef = useRef(null)
   const inputRef = useRef(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -42,6 +48,18 @@ export default function EditTaskPill({ task, onSave, onCancel }) {
     const patch = { text: title, description, recurrence: rec, priority }
     if (recurrenceType === 'one-time') patch.dueAt = dueDate ? new Date(dueDate).toISOString() : null
     else patch.dueAt = null
+    // Category change logic (only modify labels if changed)
+  const finalCategory = (creatingNewCat && newCatValue.trim() ? newCatValue.trim() : selectedCategory).toUpperCase()
+    if (finalCategory !== initialCategory) {
+      const current = Array.isArray(task.labels) ? [...task.labels] : []
+      if (finalCategory === '') {
+        if (current.length) { current.shift(); patch.labels = current }
+        else patch.labels = []
+      } else {
+        if (current.length === 0) patch.labels = [finalCategory]
+        else { current[0] = finalCategory; patch.labels = current }
+      }
+    }
     return patch
   }
 
@@ -55,9 +73,40 @@ export default function EditTaskPill({ task, onSave, onCancel }) {
           <div className="flex items-center gap-6">
             {['low','medium','high'].map(p => (
               <button key={p} type="button" className={`chip ${priority===p ? 'active': ''}`} onClick={() => setPriority(p)}>
-                {p.charAt(0).toUpperCase()+p.slice(1)}
+                {p.toUpperCase()}
               </button>
             ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-sm opacity-70" style={{minWidth:56}}>Category</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button type="button" className={`chip ${selectedCategory === '' && !creatingNewCat ? 'active' : ''}`} onClick={() => { setSelectedCategory(''); setCreatingNewCat(false) }}>GENERAL</button>
+            {categories.filter(Boolean).map(c => c.toUpperCase()).filter((v,i,a)=>a.indexOf(v)===i).sort((a,b)=>a.localeCompare(b)).map(cat => (
+              <button
+                key={cat}
+                type="button"
+                className={`chip ${!creatingNewCat && selectedCategory === cat ? 'active' : ''}`}
+                onClick={() => { setSelectedCategory(c => c === cat ? '' : cat); setCreatingNewCat(false) }}
+              >{cat}</button>
+            ))}
+            {!creatingNewCat && (
+              <button type="button" className={`chip ${creatingNewCat ? 'active' : ''}`} onClick={() => { setCreatingNewCat(true); setTimeout(()=>newCatInputRef.current?.focus(), 0) }}>+ New</button>
+            )}
+            {creatingNewCat && (
+              <input
+                ref={newCatInputRef}
+                className="ui-input"
+                style={{ width: 140 }}
+                placeholder="New category"
+                value={newCatValue}
+                onChange={e => setNewCatValue(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') { e.preventDefault(); if (newCatValue.trim()) { setSelectedCategory(newCatValue.trim()); setCreatingNewCat(false) } }
+                  else if (e.key === 'Escape') { e.preventDefault(); setCreatingNewCat(false); setNewCatValue('') }
+                }}
+              />
+            )}
           </div>
         </div>
         {recurrenceType === 'one-time' && (
