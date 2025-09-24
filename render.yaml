@@ -25,8 +25,7 @@ services:
         value: "false"
       - key: CLIENT_URL
         value: self
-      # Placeholder – replace with your actual deployed URL once known:
       - key: GOOGLE_CALLBACK_URL
-        value: https://YOUR_SERVICE_NAME.onrender.com/auth/google/callback
+        value: https://momentum.onrender.com/auth/google/callback
       # Secrets to set in dashboard (not committed):
       # MONGO_URI, SESSION_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, COOKIE_SECURE (true/false), COOKIE_SAMESITE (optional)

@@ -94,11 +94,18 @@ if (googleEnabled) {
   app.get(
     '/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/auth/failed' }),
-    (req, res) => res.redirect(CLIENT_URL)
+    (req, res) => res.redirect(CLIENT_URL === 'self' ? '/' : CLIENT_URL)
+  );
+  // Accept trailing slash variants just in case
+  app.get(
+    '/auth/google/callback/',
+    passport.authenticate('google', { failureRedirect: '/auth/failed' }),
+    (req, res) => res.redirect(CLIENT_URL === 'self' ? '/' : CLIENT_URL)
   );
 } else {
   app.get('/auth/google', (_req, res) => res.status(503).json({ error: 'Google OAuth not configured' }));
   app.get('/auth/google/callback', (_req, res) => res.status(503).json({ error: 'Google OAuth not configured' }));
+  app.get('/auth/google/callback/', (_req, res) => res.status(503).json({ error: 'Google OAuth not configured' }));
 }
 
 app.get('/auth/failed', (_req, res) => {
