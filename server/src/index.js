@@ -24,9 +24,20 @@ app.use(express.json());
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 app.use(cors({ origin: CLIENT_URL, credentials: true }));
 
-// Session
+// Session / Cookie configuration (production friendly)
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev_secret_change_me';
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/momentum';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://donotmess990_db_user:jqxyF7a2LOAhJaXK@momentum.xizqe1d.mongodb.net/';
+
+// Decide cookie attributes based on environment & overrides
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const COOKIE_SECURE = (process.env.COOKIE_SECURE || '').toLowerCase() === 'true' || NODE_ENV === 'production';
+// If frontend on different origin & using https, SameSite must be 'none'
+let sameSite = process.env.COOKIE_SAMESITE || (COOKIE_SECURE ? 'none' : 'lax');
+if (!['lax', 'none', 'strict'].includes(sameSite)) sameSite = 'lax';
+
+// On Render / proxies, trust first proxy so secure cookies work
+app.set('trust proxy', 1);
+
 app.use(
   session({
     secret: SESSION_SECRET,
@@ -34,8 +45,9 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: COOKIE_SECURE,
+      sameSite,
+      domain: process.env.COOKIE_DOMAIN || undefined,
       maxAge: 1000 * 60 * 60 * 24 * 30 // 30 days
     },
     store: MongoStore.create({ mongoUrl: MONGO_URI })
@@ -93,5 +105,7 @@ app.use('/api/me', profileRouter);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
+  if (CLIENT_URL) console.log(`CORS origin: ${CLIENT_URL}`);
+  console.log(`Google OAuth enabled: ${googleEnabled}`);
 });

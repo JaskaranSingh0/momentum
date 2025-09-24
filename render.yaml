@@ -1,0 +1,33 @@
+# Render Infrastructure as Code
+# Docs: https://render.com/docs/infrastructure-as-code
+
+services:
+  - type: web
+    name: momentum-server
+    env: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        fromService:
+          type: static_site
+          name: momentum-client
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: GOOGLE_CALLBACK_URL
+        value: https://momentum-server.onrender.com/auth/google/callback
+      # The following should be set in the Render dashboard as secrets (not committed):
+      # MONGO_URI, SESSION_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, COOKIE_SECURE, COOKIE_SAMESITE
+
+  - type: static_site
+    name: momentum-client
+    rootDir: client
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    pullRequestPreviewsEnabled: true
