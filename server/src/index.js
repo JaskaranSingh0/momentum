@@ -11,6 +11,8 @@ import diaryRouter from './routes/diary.js';
 import statsRouter from './routes/stats.js';
 import profileRouter from './routes/profile.js';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -20,19 +22,25 @@ const app = express();
 app.use(morgan('dev'));
 app.use(express.json());
 
-// CORS for client on http://localhost:5173 by default
+// CORS handling
+// If CLIENT_URL === 'self', we assume same-origin (client assets served by this server) and skip CORS.
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+if (CLIENT_URL !== 'self') {
+  app.use(cors({ origin: CLIENT_URL, credentials: true }));
+}
 
 // Session / Cookie configuration (production friendly)
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev_secret_change_me';
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://donotmess990_db_user:jqxyF7a2LOAhJaXK@momentum.xizqe1d.mongodb.net/';
+// IMPORTANT: Do not hard-code production credentials here. Provide via env var.
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/momentum';
 
 // Decide cookie attributes based on environment & overrides
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const COOKIE_SECURE = (process.env.COOKIE_SECURE || '').toLowerCase() === 'true' || NODE_ENV === 'production';
 // If frontend on different origin & using https, SameSite must be 'none'
 let sameSite = process.env.COOKIE_SAMESITE || (COOKIE_SECURE ? 'none' : 'lax');
+// If serving client and server on same origin (CLIENT_URL === 'self'), lax is sufficient & preferred.
+if (CLIENT_URL === 'self') sameSite = 'lax';
 if (!['lax', 'none', 'strict'].includes(sameSite)) sameSite = 'lax';
 
 // On Render / proxies, trust first proxy so secure cookies work
@@ -106,6 +114,19 @@ app.use('/api/me', profileRouter);
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
-  if (CLIENT_URL) console.log(`CORS origin: ${CLIENT_URL}`);
+  if (CLIENT_URL) console.log(`Client mode: ${CLIENT_URL === 'self' ? 'same-origin (no CORS)' : `CORS origin ${CLIENT_URL}`}`);
   console.log(`Google OAuth enabled: ${googleEnabled}`);
 });
+
+// Serve client build (single-service deployment)
+if (CLIENT_URL === 'self') {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const clientDist = path.resolve(__dirname, '../../client/dist');
+  app.use(express.static(clientDist));
+  // SPA fallback (exclude API, auth, health endpoints)
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/auth') || req.path === '/health') return next();
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}

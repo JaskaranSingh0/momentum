@@ -1,4 +1,6 @@
-const BASE = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+// In development we point to explicit server (vite on 5173, api on 3001). In production (single-service) use same-origin relative paths.
+const DEV_BASE = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+const BASE = import.meta.env.DEV ? DEV_BASE : '';
 
 export async function api(path, opts = {}) {
   const res = await fetch(`${BASE}${path}`, {
@@ -16,7 +18,7 @@ export async function api(path, opts = {}) {
 
 export const endpoints = {
   me: () => api('/auth/me'),
-  login: () => { window.location.href = `${BASE}/auth/google`; },
+  login: () => { window.location.href = `${BASE || ''}/auth/google`; },
   logout: () => api('/auth/logout'),
   tasks: {
     list: (date) => api(`/api/tasks?date=${encodeURIComponent(date)}`),

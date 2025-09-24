@@ -3,31 +3,27 @@
 
 services:
   - type: web
-    name: momentum-server
+    name: momentum
     env: node
     rootDir: server
     plan: free
-    buildCommand: npm install
-    startCommand: npm start
     autoDeploy: true
+    buildCommand: |
+      npm install
+      cd ../client
+      npm install
+      npm run build
+      cd ../server
+    startCommand: npm start
     envVars:
       - key: NODE_VERSION
         value: 20
       - key: NODE_ENV
         value: production
       - key: CLIENT_URL
-        fromService:
-          type: static_site
-          name: momentum-client
-          envVarKey: RENDER_EXTERNAL_URL
+        value: self
+      # Placeholder – replace with your actual deployed URL once known:
       - key: GOOGLE_CALLBACK_URL
-        value: https://momentum-server.onrender.com/auth/google/callback
-      # The following should be set in the Render dashboard as secrets (not committed):
-      # MONGO_URI, SESSION_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, COOKIE_SECURE, COOKIE_SAMESITE
-
-  - type: static_site
-    name: momentum-client
-    rootDir: client
-    buildCommand: npm install && npm run build
-    publishDir: dist
-    pullRequestPreviewsEnabled: true
+        value: https://YOUR_SERVICE_NAME.onrender.com/auth/google/callback
+      # Secrets to set in dashboard (not committed):
+      # MONGO_URI, SESSION_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, COOKIE_SECURE (true/false), COOKIE_SAMESITE (optional)
