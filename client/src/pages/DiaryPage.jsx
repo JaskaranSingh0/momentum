@@ -181,10 +181,9 @@ export default function DiaryPage() {
       </div>
       <div className="card pad-lg">
         {!focusMode && (
-          <div className="diary-date-toolbar mb-4 transition-opacity">
-            <Calendar inline />
-            <div className="date-toolbar-sep" aria-hidden="true" />
-            <WeekBar inline />
+          <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3 transition-opacity">
+            <Calendar />
+            <WeekBar />
           </div>
         )}
         {/* Mood morphing pill + goal */}
