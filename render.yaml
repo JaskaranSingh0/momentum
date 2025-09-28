@@ -1,0 +1,58 @@
+# Render Blueprint to deploy client (static site) and server (web service)
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: momentum-server
+    env: node
+    rootDir: server
+    buildCommand: ''
+    startCommand: node src/index.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        fromService:
+          type: static_site
+          name: momentum-client
+          property: url
+      # Alternatively, use CLIENT_URLS to allow multiple origins (comma-separated)
+      # - key: CLIENT_URLS
+      #   value: https://momentum-client.onrender.com
+      # Optionally allow preview subdomains via regex
+      # - key: CORS_ORIGIN_REGEX
+      #   value: ^https:\/\/.*-momentum-client-.*onrender\.com$
+      - key: MONGO_URI
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        fromService:
+          type: web
+          name: momentum-server
+          property: url
+        # The callback path is appended at runtime; ensure OAuth console matches
+      # - key: COOKIE_DOMAIN
+      #   value: .yourdomain.com
+
+  - type: static_site
+    name: momentum
+    rootDir: client
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    plan: free
+    envVars:
+      - key: VITE_SERVER_URL
+        fromService:
+          type: web
+          name: momentum-server
+          property: url
+
+# Notes:
+# - Set the missing secrets (MONGO_URI, GOOGLE_* ) after the stack is created, or configure from your Render Dashboard.
+# - Google OAuth must allow the server callback URL: <server_url>/auth/google/callback and the client origin.
