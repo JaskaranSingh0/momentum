@@ -22,7 +22,6 @@ services:
         sync: false # Set your Google OAuth client secret
       - key: GOOGLE_CALLBACK_URL
         value: https://momentum-server.onrender.com/auth/google/callback
-    plan: free
 
   - type: web
     name: momentum-client
@@ -37,4 +36,3 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    plan: free
