@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: momentum-server
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        value: https://momentum-client.onrender.com
+      - key: MONGO_URI
+        sync: false # Set this in Render dashboard or use Render's MongoDB
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false # Set your Google OAuth client ID
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false # Set your Google OAuth client secret
+      - key: GOOGLE_CALLBACK_URL
+        value: https://momentum-server.onrender.com/auth/google/callback
+    plan: free
+
+  - type: web
+    name: momentum-client
+    runtime: static
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_SERVER_URL
+        value: https://momentum-server.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    plan: free
