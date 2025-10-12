@@ -9,10 +9,11 @@
       }
     }
   ],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://momentum-server.onrender.com/api/:path*" },
+    { "source": "/auth/:path*", "destination": "https://momentum-server.onrender.com/auth/:path*" }
+  ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }

@@ -1,4 +1,6 @@
-const BASE = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+// Prefer same-origin calls in production so cookies are first-party and rewrites can proxy to the API.
+const isProd = typeof window !== 'undefined' && location.origin.includes('vercel.app');
+const BASE = import.meta.env.VITE_SERVER_URL || (isProd ? '' : 'http://localhost:3001');
 
 export async function api(path, opts = {}) {
   const res = await fetch(`${BASE}${path}`, {

@@ -89,7 +89,24 @@ if (googleEnabled) {
       console.log('🔍 OAuth callback - Set-Cookie expected (check response headers in browser devtools)');
       console.log('🔍 OAuth callback - Request headers cookie:', req.headers.cookie || '(none)');
       console.log('🔍 OAuth callback - Session data:', req.session);
-      res.redirect(CLIENT_URL);
+      // Ensure session is saved before responding to improve reliability
+      req.session.save(() => {
+        // Return a small HTML page to ensure the Set-Cookie header is processed
+        // before navigating back to the client app.
+        const html = `<!doctype html>
+<html><head><meta charset="utf-8"><title>Signing you in…</title></head>
+<body>
+  <p>Signing you in…</p>
+  <script>
+    // Navigate back to the client after a tick
+    setTimeout(function(){ window.location.replace(${JSON.stringify(CLIENT_URL)}); }, 50);
+  </script>
+  <noscript>
+    <a href=${JSON.stringify(CLIENT_URL)}>Continue</a>
+  </noscript>
+</body></html>`;
+        res.status(200).set('Content-Type', 'text/html; charset=utf-8').send(html);
+      });
     }
   );
 } else {
