@@ -15,6 +15,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
+const DEBUG_AUTH = process.env.DEBUG_AUTH === '1';
 
 // Basic config
 app.use(morgan('dev'));
@@ -58,10 +59,12 @@ app.get('/health', (_req, res) => {
 
 // Auth routes minimal
 app.get('/auth/me', (req, res) => {
-  console.log('🔍 /auth/me - Session ID:', req.sessionID);
-  console.log('🔍 /auth/me - Cookie header:', req.headers.cookie || '(none)');
-  console.log('🔍 /auth/me - User:', req.user ? req.user.email : 'null');
-  console.log('🔍 /auth/me - Session:', req.session);
+  if (DEBUG_AUTH) {
+    console.log('🔍 /auth/me - Session ID:', req.sessionID);
+    console.log('🔍 /auth/me - Cookie header:', req.headers.cookie || '(none)');
+    console.log('🔍 /auth/me - User:', req.user ? req.user.email : 'null');
+    console.log('🔍 /auth/me - Session:', req.session);
+  }
   if (!req.user) return res.status(401).json({ user: null });
   const { id, email, name, image, theme } = req.user;
   res.json({ user: { id, email, name, image, theme } });
@@ -84,11 +87,13 @@ if (googleEnabled) {
     '/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/auth/failed' }),
     (req, res) => {
-      console.log('✅ OAuth callback successful - User:', req.user?.email);
-      console.log('🔍 OAuth callback - Session ID:', req.sessionID);
-      console.log('🔍 OAuth callback - Set-Cookie expected (check response headers in browser devtools)');
-      console.log('🔍 OAuth callback - Request headers cookie:', req.headers.cookie || '(none)');
-      console.log('🔍 OAuth callback - Session data:', req.session);
+      if (DEBUG_AUTH) {
+        console.log('✅ OAuth callback successful - User:', req.user?.email);
+        console.log('🔍 OAuth callback - Session ID:', req.sessionID);
+        console.log('🔍 OAuth callback - Set-Cookie expected (check response headers in browser devtools)');
+        console.log('🔍 OAuth callback - Request headers cookie:', req.headers.cookie || '(none)');
+        console.log('🔍 OAuth callback - Session data:', req.session);
+      }
       // Ensure session is saved before responding to improve reliability
       req.session.save(() => {
         // Return a small HTML page to ensure the Set-Cookie header is processed
