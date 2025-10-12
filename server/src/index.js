@@ -20,6 +20,11 @@ const app = express();
 app.use(morgan('dev'));
 app.use(express.json());
 
+// When running behind a proxy (Render, Vercel, etc.), trust the first proxy so
+// req.secure reflects the original protocol and secure cookies can be set.
+// This is required for SameSite=None; Secure cookies on HTTPS.
+app.set('trust proxy', 1);
+
 // CORS for client on http://localhost:5173 by default
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 app.use(cors({ origin: CLIENT_URL, credentials: true }));
@@ -42,7 +47,7 @@ app.use(
   })
 );
 
-// Passport
+// Passport (must come after session middleware)
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -54,6 +59,7 @@ app.get('/health', (_req, res) => {
 // Auth routes minimal
 app.get('/auth/me', (req, res) => {
   console.log('🔍 /auth/me - Session ID:', req.sessionID);
+  console.log('🔍 /auth/me - Cookie header:', req.headers.cookie || '(none)');
   console.log('🔍 /auth/me - User:', req.user ? req.user.email : 'null');
   console.log('🔍 /auth/me - Session:', req.session);
   if (!req.user) return res.status(401).json({ user: null });
@@ -79,8 +85,10 @@ if (googleEnabled) {
     passport.authenticate('google', { failureRedirect: '/auth/failed' }),
     (req, res) => {
       console.log('✅ OAuth callback successful - User:', req.user?.email);
-      console.log('🔍 Session ID after auth:', req.sessionID);
-      console.log('🔍 Session data:', req.session);
+      console.log('🔍 OAuth callback - Session ID:', req.sessionID);
+      console.log('🔍 OAuth callback - Set-Cookie expected (check response headers in browser devtools)');
+      console.log('🔍 OAuth callback - Request headers cookie:', req.headers.cookie || '(none)');
+      console.log('🔍 OAuth callback - Session data:', req.session);
       res.redirect(CLIENT_URL);
     }
   );
