@@ -34,8 +34,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 30 // 30 days
     },
     store: MongoStore.create({ mongoUrl: MONGO_URI })
@@ -53,6 +53,9 @@ app.get('/health', (_req, res) => {
 
 // Auth routes minimal
 app.get('/auth/me', (req, res) => {
+  console.log('🔍 /auth/me - Session ID:', req.sessionID);
+  console.log('🔍 /auth/me - User:', req.user ? req.user.email : 'null');
+  console.log('🔍 /auth/me - Session:', req.session);
   if (!req.user) return res.status(401).json({ user: null });
   const { id, email, name, image, theme } = req.user;
   res.json({ user: { id, email, name, image, theme } });
@@ -74,7 +77,12 @@ if (googleEnabled) {
   app.get(
     '/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/auth/failed' }),
-    (req, res) => res.redirect(CLIENT_URL)
+    (req, res) => {
+      console.log('✅ OAuth callback successful - User:', req.user?.email);
+      console.log('🔍 Session ID after auth:', req.sessionID);
+      console.log('🔍 Session data:', req.session);
+      res.redirect(CLIENT_URL);
+    }
   );
 } else {
   app.get('/auth/google', (_req, res) => res.status(503).json({ error: 'Google OAuth not configured' }));
